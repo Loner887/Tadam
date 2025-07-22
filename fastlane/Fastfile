@@ -1,0 +1,47 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Сборка и загрузка в App Store через API"
+  lane :release do
+
+    # Загружаем API-ключ один раз
+    api_key = app_store_connect_api_key(
+      key_id: "BVX4LRRQ29",
+      issuer_id: "e36d7c80-bf51-4221-9bc4-6a36f3c2312c",
+      key_filepath: "./fastlane/AuthKey_BVX4LRRQ29.p8"
+    )
+
+    # Скачивание сертификатов и профилей
+    match(
+      type: "appstore",
+      readonly: false,
+      app_identifier: "com.tdm",
+      force_for_new_certificates: true,
+      api_key: api_key
+    )
+
+    # Сборка .ipa
+    build_app(
+      project: "Unity-iPhone.xcodeproj",
+      scheme: "Unity-iPhone",
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          "com.tdm" => "match AppStore com.tdm"
+        }
+      }
+    )
+
+    # Загрузка в App Store Connect
+    upload_to_app_store(
+      api_key: api_key,
+      skip_metadata: true,
+      skip_screenshots: true,
+      submit_for_review: false,
+      automatic_release: false,
+      skip_app_version_update: true,
+      precheck_include_in_app_purchases: false
+    )
+
+  end
+end
